@@ -101,7 +101,7 @@ pyasn1==0.4.8
     #   rsa
 pycparser==2.20
     # via cffi
-pyjwt==2.1.0
+pyjwt==2.4.0
     # via -r binderhub.in
 pyopenssl==20.0.1
     # via certipy
