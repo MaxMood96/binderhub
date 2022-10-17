@@ -11,7 +11,7 @@
 #
 # ref: https://json-schema.org/learn/getting-started-step-by-step.html
 #
-$schema": http://json-schema.org/draft-07/schema#
+$schema: http://json-schema.org/draft-07/schema#
 type: object
 additionalProperties: false
 required:
@@ -32,12 +32,13 @@ required:
   - ingress
   - initContainers
   - lifecycle
+  - extraFiles
   - extraVolumes
   - extraVolumeMounts
   - extraEnv
   - podAnnotations
+  - global
 properties:
-
   pdb: &pdb-spec
     type: object
     additionalProperties: false
@@ -260,6 +261,37 @@ properties:
       manifest as either the binder pod going into `Error` or `CrashLoopBackoff` states, or in
       some special cases, the binder pod running but... just doing very random things. Be careful!
 
+  extraFiles:
+    type: object
+    additionalProperties: false
+    description: |
+      A dictionary with extra files to be injected into the binder pod's container
+      on startup. This can for example be used to inject: configuration
+      files, custom user interface templates, images, and more.
+
+      See zero-to-jupyterhub's extraFiles documentation for reference.
+    patternProperties:
+      ".*":
+        type: object
+        additionalProperties: false
+        required: [mountPath]
+        oneOf:
+          - required: [data]
+          - required: [stringData]
+          - required: [binaryData]
+        properties:
+          mountPath:
+            type: string
+          data:
+            type: object
+            additionalProperties: true
+          stringData:
+            type: string
+          binaryData:
+            type: string
+          mode:
+            type: number
+
   jupyterhub:
     type: object
     additionalProperties: true
@@ -459,12 +491,28 @@ properties:
         type: array
         description: |
           List of hosts to route requests to the proxy.
+      ingressClassName:
+        type: [string, "null"]
+        description: |
+          Maps directly to the Ingress resource's spec.ingressClassName. To
+          configure this, your k8s cluster must have version 1.18+ or above.
+
+          See [the Kubernetes
+          documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class)
+          for more details.
       pathSuffix:
         type: [string, "null"]
         description: |
           Suffix added to Ingress's routing path pattern.
 
           Specify `*` if your ingress matches path by glob pattern.
+      pathType:
+        enum: [Prefix, Exact, ImplementationSpecific]
+        description: |
+          The path type to use. The default value is 'Prefix'. Only applies on Kubernetes v1.18+.
+
+          See [the Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types)
+          for more details about path types.
       tls:
         type: array
         description: |
@@ -545,3 +593,8 @@ properties:
     additionalProperties: true
     description: |
       DEPRECATED.
+
+# A placeholder as global values that can be referenced from the same location
+# of any chart should be possible to provide, but aren't necessarily provided or
+# used.
+global: {}

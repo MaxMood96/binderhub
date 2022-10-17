@@ -1,63 +1,67 @@
-# We use a build stage to package binderhub and pycurl into a wheel which we
-# then install by itself in the final image which is relatively slimmed.
-ARG DIST=buster
+# syntax = docker/dockerfile:1.3
 
 
 # The build stage
 # ---------------
-FROM python:3.8-$DIST as build-stage
-# ARG DIST is defined again to be made available in this build stage's scope.
-# ref: https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
-ARG DIST
+#
+# NOTE: If the image version is updated, also update it in ci/refreeze!
+#
+FROM python:3.9-bullseye as build-stage
+WORKDIR /build-stage
 
-# Install node as required to package binderhub to a wheel
-RUN echo "deb http://deb.nodesource.com/node_14.x $DIST main" > /etc/apt/sources.list.d/nodesource.list \
+# install node as required to build a binderhub wheel
+RUN echo "deb https://deb.nodesource.com/node_16.x bullseye main" > /etc/apt/sources.list.d/nodesource.list \
  && curl -s https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
 RUN apt-get update \
  && apt-get install --yes \
         nodejs \
  && rm -rf /var/lib/apt/lists/*
 
-# Copy the whole git repository to /tmp/binderhub
-COPY . /tmp/binderhub
-WORKDIR /tmp/binderhub
-
-# Build the binderhub python library into a wheel and save it to the ./dist
-# folder. There are no pycurl wheels so we build our own in the build stage.
-RUN python setup.py bdist_wheel
-RUN pip wheel pycurl --wheel-dir ./dist
+# build wheels to be mounted through a cache in the final stage
+ARG PIP_CACHE_DIR=/tmp/pip-cache
+COPY . .
+RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
+    pip install build \
+ && pip wheel \
+       . \
+       pycurl \
+       -r helm-chart/images/binderhub/requirements.txt
 
 
 # The final stage
 # ---------------
-FROM python:3.8-slim-$DIST
-WORKDIR /
+FROM python:3.9-slim-bullseye
 
-# The slim version doesn't include git as required by binderhub
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update \
+ && apt-get upgrade --yes \
  && apt-get install --yes \
         git \
+              # required by binderhub
+        libcurl4 \
+              # required by pycurl
+        tini \
+              # tini is used as an entrypoint to not loose track of SIGTERM
+              # signals as sent before SIGKILL, for example when "docker stop"
+              # or "kubectl delete pod" is run. By doing that the pod can
+              # terminate very quickly.
  && rm -rf /var/lib/apt/lists/*
 
+# install wheels built in the build stage
+ARG PIP_CACHE_DIR=/tmp/pip-cache
+COPY helm-chart/images/binderhub/requirements.txt /tmp/requirements.txt
+RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
+    --mount=type=cache,from=build-stage,source=/build-stage,target=/tmp/wheels \
+    pip install --find-links=/tmp/wheels/ \
+        binderhub \
+        pycurl \
+        -r /tmp/requirements.txt
 
-# Copy the built wheels from the build-stage. Also copy the image
-# requirements.txt built from the binderhub package requirements.txt and the
-# requirements.in file using the ./dependency script.
-COPY --from=build-stage /tmp/binderhub/dist/*.whl pre-built-wheels/
-COPY helm-chart/images/binderhub/requirements.txt .
+# verify success of previous step
+RUN python -c "import pycurl, binderhub.app"
 
-# Install pre-built wheels and the generated requirements.txt for the image.
-RUN pip install --no-cache-dir \
-        pre-built-wheels/*.whl \
-        -r requirements.txt
-
-# When using the ./dependency script to output a frozen environment, we do it
-# from within this container. So below we conditionally install pip-tools for
-# use by the ./dependency script.
-ARG PIP_TOOLS=
-RUN test -z "$PIP_TOOLS" || pip install --no-cache pip-tools==$PIP_TOOLS
-
-ENTRYPOINT ["python3", "-m", "binderhub"]
-CMD ["--config", "/etc/binderhub/config/binderhub_config.py"]
-ENV PYTHONUNBUFFERED=1
 EXPOSE 8585
+ENTRYPOINT ["tini", "--", "python", "-m", "binderhub"]
+CMD ["--config", "/etc/binderhub/config/binderhub_config.py"]

@@ -13,7 +13,6 @@
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import ClipboardJS from 'clipboard';
-import 'bootstrap';
 import 'event-source-polyfill';
 
 import BinderImage from './src/image';
@@ -22,8 +21,12 @@ import { getPathType, updatePathText } from './src/path';
 import { nextHelpText } from './src/loading';
 
 import 'xterm/css/xterm.css';
+
+// Include just the bootstrap components we use
+import 'bootstrap/js/dropdown';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/css/bootstrap-theme.min.css';
+
 import '../index.css';
 
 const BASE_URL = $('#base-url').data().url;
@@ -346,9 +349,14 @@ function loadingMain(providerSpec) {
   if (path) {
     pathType = 'url';
   } else {
-    path = params.get('filepath');
+    path = params.get('labpath');
     if (path) {
-      pathType = 'file';
+      pathType = 'lab';
+    } else {
+      path = params.get('filepath');
+      if (path) {
+        pathType = 'file';
+      }
     }
   }
   build(providerSpec, log, fitAddon, path, pathType);

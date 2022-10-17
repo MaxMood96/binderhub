@@ -4,6 +4,7 @@ Welcome! As a [Jupyter](https://jupyter.org) project, we follow the
 [Jupyter contributor guide](https://jupyter.readthedocs.io/en/latest/contributing/content-contributor.html).
 
 Depending on what you want to develop, you can setup BinderHub in different ways.
+
 - [Develop documentation](#develop-documentation).
 - [Develop user interface](#develop-user-interface). A BinderHub webserver is running locally and
   JupyterHub is mocked, this setup doesn't involve Kubernetes.
@@ -12,9 +13,8 @@ Depending on what you want to develop, you can setup BinderHub in different ways
 - [Develop Helm chart](#develop-helm-chart) - The BinderHub Helm chart with JupyterHub as a
   dependency is installed in a Kubernetes cluster.
 
- This document also contains information on [how to run tests](#running-tests) and
- [common maintainer tasks](#common-maintainer-tasks).
-
+This document also contains information on [how to run tests](#running-tests) and
+[common maintainer tasks](#common-maintainer-tasks).
 
 ## Develop documentation
 
@@ -50,7 +50,6 @@ language](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 1. Open the main documentation page in your browser, it is located at
    `_build/html/index.html`. On a Mac you can open it directly from the
    terminal with `open _build/html/index.html`.
-
 
 ## Develop user interface
 
@@ -152,7 +151,6 @@ continue.
    you change. You can also start running `pytest` tests to verify the
    Deployment functions as it should.
 
-
 ### Cleanup resources
 
 1. To cleanup the JupyterHub Helm chart you have installed in Kubernetes...
@@ -214,7 +212,7 @@ continue.
    helm template --validate binderhub-test helm-chart/binderhub \
       --values testing/k8s-binder-k8s-hub/binderhub-chart-config.yaml \
       --set config.BinderHub.hub_url=http://$(minikube ip):30902 \
-      --set config.BinderHub.access_token=$GITHUB_ACCESS_TOKEN
+      --set config.GitHubRepoProvider.access_token=$GITHUB_ACCESS_TOKEN
    ```
 
    If the validation succeeds, go ahead and upgrade/install the Helm chart.
@@ -225,7 +223,7 @@ continue.
    helm upgrade --install binderhub-test helm-chart/binderhub \
       --values testing/k8s-binder-k8s-hub/binderhub-chart-config.yaml \
       --set config.BinderHub.hub_url=http://$(minikube ip):30902 \
-      --set config.BinderHub.access_token=$GITHUB_ACCESS_TOKEN
+      --set config.GitHubRepoProvider.access_token=$GITHUB_ACCESS_TOKEN
 
    echo "BinderHub inside the Minikube based Kubernetes cluster is starting up at http://$(minikube ip):30901"
    ```
@@ -334,9 +332,6 @@ underlying VM, which might be too low to run the builder successfully.
 You may run `minikube start --memory 8192` to start Minikube with a 8GiB
 VM underneath.
 
-
-
-
 ## Running tests
 
 This git repository contains `pytest` based tests that you can run locally.
@@ -345,6 +340,7 @@ tests. You can get some hints on what tests to run and how by inspecting
 `.github`.
 
 ### Environment variables influencing tests
+
 - `BINDER_URL`: An address of an already running BinderHub as reachable from the
   tests. If this is set, the test suite will not start temporary local BinderHub
   servers but instead interact with the remote BinderHub.
@@ -353,16 +349,15 @@ tests. You can get some hints on what tests to run and how by inspecting
   GitHub API.
 
 ### Pytest marks labelling tests
+
 - `remote`: Tests for when BinderHub is already running somewhere.
 - `github_api`: Tests that communicate with the GitHub API a lot.
 - `auth`: Tests related to BinderHub's usage of JupyterHub as an OAuth2 Identity
   Provider (IdP) for non public access.
 
-
 ## Common maintainer tasks
 
 These are tasks that BinderHub maintainers perform.
-
 
 ### Bumping the JupyterHub Helm chart version
 
@@ -376,21 +371,19 @@ Use the [JupyterHub Helm chart's
 changelog](https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/master/CHANGELOG.md)
 to prepare for breaking changes associated with the version bump.
 
-
 ### Releasing
 
 #### BinderHub Python package release checklist
 
-* update/close the `CHANGES.md` for this release (see below)
-* create a git tag for the release
-* `pip install twine`
-* `python setup.py sdist`
-* `python setup.py bdist_wheel`
-* `twine check dist/*` to check the README parses on PyPI
-* edit `$HOME/.pypirc` to use the binder team account
-* `twine upload dist/*`
-* create a new release on https://github.com/jupyterhub/binderhub/releases
-* add a new section at the top of the change log for future releases
+- update/close the `CHANGES.md` for this release (see below)
+- create a git tag for the release
+- `pip install build twine`
+- `python -mbuild .`
+- `twine check dist/*` to check the README parses on PyPI
+- edit `$HOME/.pypirc` to use the binder team account
+- `twine upload dist/*`
+- create a new release on https://github.com/jupyterhub/binderhub/releases
+- add a new section at the top of the change log for future releases
 
 For more details, see this [guide on uploading package to
 PyPI](https://packaging.python.org/guides/distributing-packages-using-setuptools/#uploading-your-project-to-pypi).
@@ -399,7 +392,7 @@ PyPI](https://packaging.python.org/guides/distributing-packages-using-setuptools
 
 As BinderHub does not have a typical semver release schedule, we try to
 update the changelog in `CHANGES.md` every three months. A useful tool
-for this [can be found here](https://github.com/choldgraf/github-activity).
+for this [can be found here](https://github.com/executablebooks/github-activity).
 If you choose to use this tool, the command that generated current sections
 in the changelog is below:
 

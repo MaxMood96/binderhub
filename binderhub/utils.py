@@ -1,11 +1,12 @@
 """Miscellaneous utilities"""
-from collections import OrderedDict
-from hashlib import blake2b
 import ipaddress
 import time
+from collections import OrderedDict
+from hashlib import blake2b
+from unittest.mock import Mock
 
+from kubernetes.client import api_client
 from traitlets import Integer, TraitError
-
 
 # default _request_timeout for kubernetes api requests
 # tuple of two timeouts: (connect_timeout, read_timeout)
@@ -200,9 +201,5 @@ def ip_in_networks(ip, networks, min_prefix_len=1):
 # to avoid instantiating ThreadPools.
 # This is known to work for kubernetes-4.0
 # and may need updating with later kubernetes clients
-
-from unittest.mock import Mock
-from kubernetes.client import api_client
-
 _dummy_pool = Mock()
 api_client.ThreadPool = lambda *args, **kwargs: _dummy_pool
