@@ -63,7 +63,7 @@ jsonschema==3.2.0
     #   jupyter-telemetry
 jupyter-telemetry==0.1.0
     # via jupyterhub
-jupyterhub==1.4.2
+jupyterhub==1.5.0
     # via
     #   -r binderhub.in
     #   -r requirements.in
@@ -71,13 +71,13 @@ kubernetes==9.0.1
     # via
     #   -r binderhub.in
     #   -r requirements.in
-mako==1.1.5
+mako==1.2.2
     # via alembic
 markupsafe==2.0.1
     # via
     #   jinja2
     #   mako
-oauthlib==3.1.1
+oauthlib==3.2.1
     # via
     #   jupyterhub
     #   requests-oauthlib
