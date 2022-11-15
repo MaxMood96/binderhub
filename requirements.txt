@@ -18,3 +18,4 @@ python-json-logger
 tornado>=5.1
 traitlets
 pyjwt>=2
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
