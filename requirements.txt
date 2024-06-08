@@ -15,6 +15,6 @@ jupyterhub
 kubernetes
 prometheus_client
 python-json-logger
-tornado>=5.1
+tornado>=6.4.1
 traitlets
 pyjwt>=2
