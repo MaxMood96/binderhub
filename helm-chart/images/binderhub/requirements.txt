@@ -160,7 +160,7 @@ traitlets==5.1.0
     #   -r binderhub.in
     #   jupyter-telemetry
     #   jupyterhub
-urllib3==1.26.6
+urllib3==1.26.19
     # via
     #   kubernetes
     #   requests
