@@ -95,7 +95,7 @@ protobuf==3.17.3
     #   googleapis-common-protos
 pyasn1-modules==0.2.8
     # via google-auth
-pyasn1==0.4.8
+pyasn1==0.6.2
     # via
     #   pyasn1-modules
     #   rsa
